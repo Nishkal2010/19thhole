@@ -9,7 +9,9 @@ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID || 'missing',
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'missing',
-  callbackURL: '/api/auth/google/callback',
+  callbackURL: process.env.NODE_ENV === 'production'
+    ? `${process.env.CLIENT_URL}/api/auth/google/callback`
+    : 'http://localhost:3001/api/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const { rows } = await pool.query(
