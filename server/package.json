@@ -1,0 +1,24 @@
+{
+  "name": "the-19th-hole-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "connect-pg-simple": "^10.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "express-session": "^1.18.0",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^8.0.4",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.20.0",
+    "rss-parser": "^3.13.0",
+    "xml2js": "^0.6.2"
+  }
+}

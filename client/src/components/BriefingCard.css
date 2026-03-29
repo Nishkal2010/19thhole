@@ -1,0 +1,64 @@
+.briefing-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 18px 18px 18px 21px;
+  border-left: 3px solid var(--gold);
+}
+
+.briefing-loading {
+  min-height: 180px;
+}
+
+.briefing-error {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.briefing-error-msg {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.briefing-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.briefing-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.briefing-para {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.briefing-para:last-of-type {
+  margin-bottom: 0;
+}
+
+.briefing-name {
+  font-weight: 500;
+}
+
+.briefing-date {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 16px;
+}

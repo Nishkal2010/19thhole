@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0D0D0D;
+  --bg-secondary: #161616;
+  --bg-tertiary: #1E1E1E;
+
+  /* Borders */
+  --border: #2A2A2A;
+
+  /* Text */
+  --text-primary: #F5F5F5;
+  --text-secondary: #A0A0A0;
+
+  /* Accents */
+  --gold: #C9A84C;
+  --green-accent: #4CAF50;
+  --red-accent: #E53935;
+
+  /* Tour badges */
+  --pga-color: #0057B8;
+  --liv-color: #D4A017;
+
+  /* Layout */
+  --nav-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Hide scrollbars on mobile */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Scrollbar on desktop */
+@media (min-width: 769px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+}
+
+/* Utility */
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 16px;
+  width: 100%;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #1E1E1E 25%, #2A2A2A 50%, #1E1E1E 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Page fade-in */
+.page-fade {
+  animation: fadeIn 300ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
