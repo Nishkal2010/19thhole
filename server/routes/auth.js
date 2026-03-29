@@ -9,7 +9,10 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: `${CLIENT_URL}/?error=auth_failed` }),
   (req, res) => {
-    res.redirect(CLIENT_URL);
+    // Explicitly save session before redirect to avoid serverless race condition
+    req.session.save(() => {
+      res.redirect(CLIENT_URL);
+    });
   }
 );
 
