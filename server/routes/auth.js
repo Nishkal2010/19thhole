@@ -1,33 +1,47 @@
 const express = require('express');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const JWT_SECRET = process.env.SESSION_SECRET || 'golf-secret-change-me';
 
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
 
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: `${CLIENT_URL}/?error=auth_failed` }),
+  passport.authenticate('google', { failureRedirect: `${CLIENT_URL}/?error=auth_failed`, session: false }),
   (req, res) => {
-    // Explicitly save session before redirect to avoid serverless race condition
-    req.session.save(() => {
-      res.redirect(CLIENT_URL);
-    });
+    const token = jwt.sign(
+      { id: req.user.id, email: req.user.email, name: req.user.name, picture: req.user.picture },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    res.cookie('auth_token', token, COOKIE_OPTIONS);
+    res.redirect(CLIENT_URL);
   }
 );
 
 router.get('/me', (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.json({ user: req.user });
+  const token = req.cookies?.auth_token;
+  if (!token) return res.json({ user: null });
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    return res.json({ user });
+  } catch {
+    return res.json({ user: null });
   }
-  res.json({ user: null });
 });
 
-router.post('/logout', (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    res.json({ success: true });
-  });
+router.post('/logout', (req, res) => {
+  res.clearCookie('auth_token', COOKIE_OPTIONS);
+  res.json({ success: true });
 });
 
 module.exports = router;

@@ -1,8 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { pool } = require('../db/database');
 const { sendWelcomeEmail, sendNewsletterToAll } = require('../services/emailService');
 const { generateBriefing } = require('../services/briefingService');
+
+function getUserFromCookie(req) {
+  try {
+    const token = req.cookies?.auth_token;
+    if (!token) return null;
+    return jwt.verify(token, process.env.SESSION_SECRET || 'golf-secret-change-me');
+  } catch {
+    return null;
+  }
+}
 
 // POST /api/subscribe
 router.post('/subscribe', async (req, res) => {
@@ -27,7 +38,7 @@ router.post('/subscribe', async (req, res) => {
         [email]
       );
     } else {
-      const userId = req.user?.id || null;
+      const userId = getUserFromCookie(req)?.id || null;
       await pool.query(
         'INSERT INTO email_subscribers (email, name, user_id) VALUES ($1, $2, $3)',
         [email, name || null, userId]
