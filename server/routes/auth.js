@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-const JWT_SECRET = process.env.SESSION_SECRET || 'golf-secret-change-me';
+const { sessionSecret } = require('../config/secrets');
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -20,7 +20,7 @@ router.get('/google/callback',
   (req, res) => {
     const token = jwt.sign(
       { id: req.user.id, email: req.user.email, name: req.user.name, picture: req.user.picture },
-      JWT_SECRET,
+      sessionSecret(),
       { expiresIn: '7d' }
     );
     res.cookie('auth_token', token, COOKIE_OPTIONS);
@@ -32,7 +32,7 @@ router.get('/me', (req, res) => {
   const token = req.cookies?.auth_token;
   if (!token) return res.json({ user: null });
   try {
-    const user = jwt.verify(token, JWT_SECRET);
+    const user = jwt.verify(token, sessionSecret());
     return res.json({ user });
   } catch {
     return res.json({ user: null });

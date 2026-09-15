@@ -4,12 +4,13 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../db/database');
 const { sendWelcomeEmail, sendNewsletterToAll } = require('../services/emailService');
 const { generateBriefing } = require('../services/briefingService');
+const { sessionSecret, unsubscribeTokenValid } = require('../config/secrets');
 
 function getUserFromCookie(req) {
   try {
     const token = req.cookies?.auth_token;
     if (!token) return null;
-    return jwt.verify(token, process.env.SESSION_SECRET || 'golf-secret-change-me');
+    return jwt.verify(token, sessionSecret());
   } catch {
     return null;
   }
@@ -58,8 +59,21 @@ router.post('/subscribe', async (req, res) => {
 
 // DELETE /api/unsubscribe
 router.delete('/unsubscribe', async (req, res) => {
-  const { email } = req.body;
+  const { email, token } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required.' });
+
+  // This route took an address and deactivated it with no proof the caller
+  // owned it, so anyone could unsubscribe anyone. The signed-in owner of the
+  // address may still call it directly; everyone else needs the token that is
+  // embedded in the unsubscribe link of every email we send.
+  const signedIn = getUserFromCookie(req);
+  const ownsIt =
+    signedIn &&
+    typeof signedIn.email === 'string' &&
+    signedIn.email.toLowerCase() === String(email).trim().toLowerCase();
+  if (!ownsIt && !unsubscribeTokenValid(email, token)) {
+    return res.status(403).json({ error: 'Invalid or missing unsubscribe token.' });
+  }
 
   await pool.query(
     'UPDATE email_subscribers SET is_active = FALSE WHERE email = $1',
@@ -89,11 +103,12 @@ router.post('/send-newsletter', async (req, res) => {
 // GET /api/cron/newsletter — called by Vercel cron at 7AM CST daily
 router.get('/cron/newsletter', async (req, res) => {
   // Vercel sends this header to verify it's a legitimate cron call
+  // Was gated on NODE_ENV === 'production', so any deployment that did not set
+  // NODE_ENV left the newsletter sender open, and a blank CRON_SECRET made
+  //'Bearer undefined' a valid header. Both now fail closed.
   const authHeader = req.headers.authorization;
-  if (
-    process.env.NODE_ENV === 'production' &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized.' });
   }
 

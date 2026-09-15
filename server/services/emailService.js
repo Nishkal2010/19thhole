@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { pool } = require('../db/database');
+const { unsubscribeToken } = require('../config/secrets');
 
 function createTransporter() {
   return nodemailer.createTransport({
@@ -120,7 +121,9 @@ function newsletterEmailHtml(briefingContent, date, unsubscribeUrl) {
 async function sendWelcomeEmail(email, name) {
   const transporter = createTransporter();
   const appUrl = process.env.CLIENT_URL || 'https://the19thhole.vercel.app';
-  const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
+  const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(
+    email,
+  )}&token=${unsubscribeToken(email)}`;
   await transporter.sendMail({
     from: `"The 19th Hole" <${process.env.EMAIL_USER}>`,
     to: email,
