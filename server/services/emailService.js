@@ -2,6 +2,24 @@ const nodemailer = require('nodemailer');
 const { pool } = require('../db/database');
 const { unsubscribeToken } = require('../config/secrets');
 
+// the19thhole.vercel.app was this app's old hostname. It is no longer ours:
+// the .vercel.app subdomain was released and has since been claimed by someone
+// else, and as of 2026-09-15 it serves an unrelated gambling site. It was the
+// CLIENT_URL fallback in every welcome email, newsletter and unsubscribe link,
+// so any deployment missing that variable mailed our subscribers a link to a
+// stranger's spam. The fallback now points at a host we actually control, and
+// says loudly when it is being used.
+function appUrl() {
+  const configured = process.env.CLIENT_URL;
+  if (configured) return configured;
+  console.error(
+    '[email] CLIENT_URL is not set. Falling back to https://19thhole.vercel.app. ' +
+      'Set CLIENT_URL so outbound links point at the intended host.',
+  );
+  return 'https://19thhole.vercel.app';
+}
+
+
 function createTransporter() {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -39,7 +57,7 @@ function welcomeEmailHtml(name, unsubscribeUrl) {
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="background:#C9A84C;border-radius:8px;">
-                  <a href="${process.env.CLIENT_URL || 'https://the19thhole.vercel.app'}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:500;color:#000000;text-decoration:none;">
+                  <a href="${appUrl()}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:500;color:#000000;text-decoration:none;">
                     Open The 19th Hole
                   </a>
                 </td>
@@ -95,7 +113,7 @@ function newsletterEmailHtml(briefingContent, date, unsubscribeUrl) {
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="background:#C9A84C;border-radius:8px;">
-                  <a href="${process.env.CLIENT_URL || 'https://the19thhole.vercel.app'}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:500;color:#000000;text-decoration:none;">
+                  <a href="${appUrl()}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:500;color:#000000;text-decoration:none;">
                     Read More
                   </a>
                 </td>
@@ -120,8 +138,8 @@ function newsletterEmailHtml(briefingContent, date, unsubscribeUrl) {
 
 async function sendWelcomeEmail(email, name) {
   const transporter = createTransporter();
-  const appUrl = process.env.CLIENT_URL || 'https://the19thhole.vercel.app';
-  const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(
+  const base = appUrl();
+  const unsubscribeUrl = `${base}/unsubscribe?email=${encodeURIComponent(
     email,
   )}&token=${unsubscribeToken(email)}`;
   await transporter.sendMail({
@@ -134,14 +152,16 @@ async function sendWelcomeEmail(email, name) {
 
 async function sendNewsletterToAll(briefingContent, date) {
   const transporter = createTransporter();
-  const appUrl = process.env.CLIENT_URL || 'https://the19thhole.vercel.app';
+  const base = appUrl();
   const { rows: subscribers } = await pool.query(
     'SELECT email, name FROM email_subscribers WHERE is_active = TRUE'
   );
 
   const results = await Promise.allSettled(
     subscribers.map(sub => {
-      const unsubscribeUrl = `${appUrl}/unsubscribe?email=${encodeURIComponent(sub.email)}`;
+      const unsubscribeUrl = `${base}/unsubscribe?email=${encodeURIComponent(
+        sub.email,
+      )}&token=${unsubscribeToken(sub.email)}`;
       return transporter.sendMail({
         from: `"The 19th Hole" <${process.env.EMAIL_USER}>`,
         to: sub.email,
